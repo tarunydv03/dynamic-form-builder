@@ -1,0 +1,512 @@
+/* src/App.css */
+:root {
+  --primary-color: #4a90e2;
+  --light-gray: #f4f4f4;
+  --medium-gray: #ddd;
+  --dark-gray: #333;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  margin: 0;
+  background-color: var(--light-gray);
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-header {
+  background-color: white;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--medium-gray);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mode-switcher button {
+  margin-left: 1rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--primary-color);
+  background-color: white;
+  color: var(--primary-color);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.mode-switcher button:disabled {
+  background-color: var(--primary-color);
+  color: white;
+  cursor: not-allowed;
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 1rem;
+  display: flex; /* Ensures content fills height */
+}
+
+.form-builder-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1rem;
+  width: 100%;
+}
+
+.question-pool-panel, .form-canvas {
+  background-color: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  overflow-y: auto;
+}
+
+.question-pool-panel h3 {
+  margin-top: 0;
+  border-bottom: 1px solid var(--medium-gray);
+  padding-bottom: 0.5rem;
+}
+
+.pool-question {
+  padding: 0.8rem;
+  margin-bottom: 0.5rem;
+  background-color: var(--light-gray);
+  border: 1px dashed var(--medium-gray);
+  border-radius: 4px;
+  cursor: grab;
+  text-align: center;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+.pool-question:hover {
+  background-color: #e0e0e0;
+}
+
+
+.canvas-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+  border: 2px dashed var(--medium-gray);
+  border-radius: 8px;
+  font-size: 1.2rem;
+}
+
+
+.form-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  background-color: #fdfdfd;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+ 
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+
+.drag-handle {
+  padding: 0.5rem;
+  cursor: grab;
+  color: #999;
+  touch-action: none; 
+  border-right: 1px solid #eee;
+  height: 100%;
+}
+.drag-handle:hover {
+  color: #333;
+}
+
+.field-content {
+  flex-grow: 1;
+}
+
+.form-field label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+}
+
+.form-field input, .form-field select {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid var(--medium-gray);
+  border-radius: 4px;
+  box-sizing: border-box; /* Important */
+  background-color: #f9f9f9;
+  font-size: 14px;
+}
+
+.form-field .logic-indicator {
+  font-size: 12px;
+  color: #555;
+  background-color: #e8f5e9;
+  padding: 5px;
+  border-radius: 3px;
+  margin-top: 10px;
+  border: 1px solid #d4edda;
+}
+
+.field-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+  border-top: 1px solid #eee;
+  padding-top: 0.75rem;
+}
+
+.field-actions button {
+  border: none;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.field-actions .remove-btn {
+  background-color: #e74c3c;
+  color: white;
+  margin-left: auto;
+}
+
+.form-renderer, .modal-backdrop {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+.form-renderer {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.rendered-field {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid #eee;
+}
+.rendered-field:last-child {
+    border-bottom: none;
+}
+.rendered-field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+.rendered-field input, .rendered-field select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+.submit-btn {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: bold;
+    margin-top: 1rem;
+}
+
+
+/* Modal Styling */
+.modal-backdrop {
+    position: fixed;
+    z-index: 100;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.modal-content textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--medium-gray);
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-family: monospace;
+    margin: 1rem 0;
+}
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+.modal-actions button {
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.modal-actions button:first-child {
+    background-color: var(--primary-color);
+    color: white;
+}
+.modal-info {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+    font-size: 14px;
+}
+.modal-info ul {
+    list-style: none;
+    padding: 0;
+}
+.modal-info li {
+    background-color: #f4f4f4;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+}
+.modal-info code {
+    background-color: #e0e0e0;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+
+/* Add these new styles to src/App.css */
+
+.logic-type-selector {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.logic-type-selector label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.logic-type-selector select {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid var(--medium-gray);
+  border-radius: 4px;
+}
+
+.logic-builder {
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 4px;
+  border: 1px solid #eee;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.logic-builder select,
+.logic-builder input {
+  padding: 0.6rem;
+  border: 1px solid var(--medium-gray);
+  border-radius: 4px;
+  flex-grow: 1;
+}
+
+.logic-note {
+  font-size: 12px;
+  color: #666;
+  width: 100%;
+  margin: 5px 0 0 0;
+}
+
+.modal-actions .clear-logic-btn {
+  background-color: transparent;
+  color: #e74c3c;
+  margin-right: auto;
+  border: 1px solid #e74c3c;
+}
+
+/* Add these new styles to src/App.css */
+
+.custom-question-section {
+  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--medium-gray);
+}
+
+.add-custom-btn {
+  width: 100%;
+  padding: 0.8rem;
+  font-size: 1rem;
+  font-weight: bold;
+  cursor: pointer;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+.add-custom-btn:hover {
+  opacity: 0.9;
+}
+
+.modal-section {
+  margin-bottom: 1rem;
+}
+.modal-section label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+.modal-section input, .modal-section select {
+  width: 100%;
+  padding: 0.6rem;
+  border: 1px solid var(--medium-gray);
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.choice-editor {
+  background-color: #f9f9f9;
+  padding: 1rem;
+  border-radius: 4px;
+}
+.choice-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.choice-row input {
+  flex-grow: 1;
+}
+.remove-choice-btn {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.add-choice-btn {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: #e0e0e0;
+  border: 1px dashed #ccc;
+  cursor: pointer;
+}
+
+
+.field-actions .edit-btn {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ccc;
+}
+
+.modal-section input:disabled {
+  background-color: #eee;
+  color: #777;
+  cursor: not-allowed;
+}
+
+
+.app-header {
+    justify-content: space-between;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.save-load-header-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.save-section, .load-section {
+    border-top: 1px solid #eee;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+}
+
+.save-row {
+    display: flex;
+    gap: 10px;
+}
+.save-row input {
+    flex-grow: 1;
+}
+
+.save-load-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.saved-forms-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
+    padding: 0.5rem;
+}
+
+.saved-form-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem;
+    border-bottom: 1px solid #eee;
+}
+.saved-form-row:last-child {
+    border-bottom: none;
+}
+.saved-form-row span small {
+    color: #777;
+    margin-left: 10px;
+}
+
+.saved-form-actions {
+    display: flex;
+    gap: 10px;
+}
