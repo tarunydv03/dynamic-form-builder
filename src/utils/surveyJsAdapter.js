@@ -23,6 +23,32 @@ export function translateToSurveyJS(formFields) {
     return surveyJson;
   }
 
+  // If any panels are present, pass them directly
+  if (formFields.some(f => f.type === 'panel')) {
+    surveyJson.pages[0].elements = formFields.map(f => {
+      if (f.type === 'panel') {
+        return {
+          type: 'panel',
+          name: f.name,
+          title: f.title,
+          elements: f.elements.map(field => ({
+            ...field,
+            name: field.id,
+            title: field.title,
+            // ...other field properties
+          }))
+        };
+      } else {
+        return {
+          ...f,
+          name: f.id,
+          title: f.title,
+        };
+      }
+    });
+    return surveyJson;
+  }
+
   // Map over our field objects and convert them to the SurveyJS format
   const surveyJsElements = formFields.map(field => {
     // Start with properties that map directly
@@ -39,6 +65,7 @@ export function translateToSurveyJS(formFields) {
       labelFalse: field.labelFalse,
       visibleIf: field.visibleIf,
       enableIf: field.enableIf,
+      requireIf: field.requireIf,
       triggers: field.triggers,
     };
 
@@ -48,9 +75,7 @@ export function translateToSurveyJS(formFields) {
       newElement.title = field.title;
       newElement.allowAddPanel = false;
       newElement.allowRemovePanel = false;
-      
       newElement.visibleIf = `{${field.repeat.countSource}} > 0`;
-
       newElement.bindings = {
           panelCount: field.repeat.countSource
       };
@@ -64,7 +89,6 @@ export function translateToSurveyJS(formFields) {
         },
       ];
     }
-    
     return newElement;
   });
 
