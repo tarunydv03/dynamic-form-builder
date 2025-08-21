@@ -37,11 +37,8 @@ export function translateToSurveyJS(formFields) {
       isRequired: field.isRequired,
       labelTrue: field.labelTrue,
       labelFalse: field.labelFalse,
-      
-      // Pass both logic properties directly.
-      // SurveyJS will use 'visibleIf' for continuous visibility checks.
       visibleIf: field.visibleIf,
-      // It will use 'triggers' for other actions like 'enable' or 'require'.
+      enableIf: field.enableIf,
       triggers: field.triggers,
     };
 

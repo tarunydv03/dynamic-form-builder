@@ -71,7 +71,6 @@ function LogicEditor({ field, formFields, setFormFields, onClose }) {
             rules.forEach(rule => {
               const { sourceQuestionId, operator, value, type } = rule;
               let expression = '';
-              
               // Construct the expression string that SurveyJS understands
               if (sourceQuestionId && operator) {
                 if (operator === 'empty' || operator === 'notempty') {
@@ -80,19 +79,16 @@ function LogicEditor({ field, formFields, setFormFields, onClose }) {
                   expression = `{${sourceQuestionId}} ${operator} '${value}'`;
                 }
               }
-
               if (expression) {
-                // This is the critical separation:
-                // 'visible' rules get their own dedicated property.
                 if (type === 'visible') {
                   visibleIfExpression = expression;
+                } else if (type === 'enable') {
+                  updatedField.enableIf = expression;
                 } else {
-                  // All other rules ('enable', 'require') go into the 'triggers' array.
                   finalTriggers.push({ type, expression });
                 }
               }
             });
-            
             if (visibleIfExpression) {
               updatedField.visibleIf = visibleIfExpression;
             }
