@@ -1,53 +1,43 @@
-// src/components/LogicEditor.jsx
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { v4 as uuidv4 } from 'uuid';
 import '../App.css';
-
+ 
 function LogicEditor({ field, formFields, setFormFields, onClose }) {
+  // State for the simple, non-conditional "is required" checkbox
+  const [isRequired, setIsRequired] = useState(!!field.isRequired);
   const [logicSavedCount, setLogicSavedCount] = useState(null);
   const [logicMode, setLogicMode] = useState('conditional');
   const [rules, setRules] = useState([]);
   const [repeatRule, setRepeatRule] = useState({ sourceQuestionId: '' });
-
+ 
   const currentIndex = formFields.findIndex(f => f.id === field.id);
-  // Only allow logic based on questions that come before the current one
   const availableQuestions = formFields.filter((f, idx) => idx < currentIndex);
-
-  // This effect runs once when the modal opens to pre-fill the UI with any existing logic.
+ 
   useEffect(() => {
-    // Check if repeat logic exists
     if (field.repeat) {
       setLogicMode('repeat');
       setRepeatRule({ sourceQuestionId: field.repeat.countSource || '' });
     } else {
-      // Otherwise, default to conditional and populate its rules
       setLogicMode('conditional');
       const allRules = [];
-      
-      // If a visibleIf rule exists, add it to our UI state. This is the primary visibility rule.
-      if (field.visibleIf) {
-        // Use a regex to parse the expression back into UI-friendly parts
-        const match = field.visibleIf.match(/\{([^}]+)\}\s*([<>=!]+|empty|notempty)\s*'([^']*)'?/);
+      const parseExpression = (expression, type) => {
+        if (!expression) return;
+        const match = expression.match(/\{([^}]+)\}\s*([<>=!]+|empty|notempty)\s*'([^']*)'?/);
         if (match) {
-          allRules.push({ id: uuidv4(), type: 'visible', sourceQuestionId: match[1], operator: match[2], value: match[3] || '' });
+          allRules.push({ id: uuidv4(), type, sourceQuestionId: match[1], operator: match[2], value: match[3] || '' });
         }
-      }
+      };
       
-      // If other triggers exist (like 'enable' or 'require'), add them too.
-      if (field.triggers) {
-        field.triggers.forEach(t => {
-           const match = t.expression.match(/\{([^}]+)\}\s*([<>=!]+|empty|notempty)\s*'([^']*)'?/);
-           if(match) {
-             allRules.push({ id: uuidv4(), type: t.type, sourceQuestionId: match[1], operator: match[2], value: match[3] || '' });
-           }
-        });
-      }
+      parseExpression(field.visibleIf, 'visible');
+      parseExpression(field.enableIf, 'enable');
+      
       setRules(allRules);
     }
-  }, [field]); // Dependency array ensures this runs only once when 'field' is first passed in.
-
+  }, [field]);
+ 
   const addRule = () => {
+    // Default new rules to 'visible'
     const newRule = { id: uuidv4(), type: 'visible', operator: '=', value: '', sourceQuestionId: '' };
     setRules([...rules, newRule]);
   };
@@ -61,52 +51,40 @@ function LogicEditor({ field, formFields, setFormFields, onClose }) {
       prevFields.map(f => {
         if (f.id === field.id) {
           const updatedField = { ...f };
-          // Clear all previous logic properties to ensure a clean state
+          // Clear all previous logic properties for a clean update
           delete updatedField.triggers;
           delete updatedField.repeat;
           delete updatedField.visibleIf;
-
+          delete updatedField.enableIf;
+          
+          // Set the simple, non-conditional isRequired property from the checkbox
+          updatedField.isRequired = isRequired;
+ 
           if (logicMode === 'conditional') {
             let visibleIfExpression = null;
-            const finalTriggers = [];
-
+            let enableIfExpression = null;
+            
             rules.forEach(rule => {
               const { sourceQuestionId, operator, value, type } = rule;
               let expression = '';
-              // If 'require' and no condition, set isRequired true
-              if (type === 'require' && !sourceQuestionId) {
-                updatedField.isRequired = true;
-                delete updatedField.requireIf;
-                return;
-              }
-              // Construct the expression string that SurveyJS understands
               if (sourceQuestionId && operator) {
-                if (operator === 'empty' || operator === 'notempty') {
-                  expression = `{${sourceQuestionId}} ${operator}`;
-                } else if (value.trim() !== '') {
-                  expression = `{${sourceQuestionId}} ${operator} '${value}'`;
-                }
+                expression = (operator === 'empty' || operator === 'notempty')
+                  ? `{${sourceQuestionId}} ${operator}`
+                  : `{${sourceQuestionId}} ${operator} '${value}'`;
               }
+ 
               if (expression) {
                 if (type === 'visible') {
                   visibleIfExpression = expression;
                 } else if (type === 'enable') {
-                  updatedField.enableIf = expression;
-                } else if (type === 'require') {
-                  updatedField.requireIf = expression;
-                  updatedField.isRequired = false;
-                } else {
-                  finalTriggers.push({ type, expression });
+                  enableIfExpression = expression;
                 }
               }
             });
-            if (visibleIfExpression) {
-              updatedField.visibleIf = visibleIfExpression;
-            }
-            if (finalTriggers.length > 0) {
-              updatedField.triggers = finalTriggers;
-            }
-
+            
+            if (visibleIfExpression) updatedField.visibleIf = visibleIfExpression;
+            if (enableIfExpression) updatedField.enableIf = enableIfExpression;
+ 
           } else if (logicMode === 'repeat' && repeatRule.sourceQuestionId) {
             updatedField.repeat = { countSource: repeatRule.sourceQuestionId };
           }
@@ -115,63 +93,53 @@ function LogicEditor({ field, formFields, setFormFields, onClose }) {
         return f;
       })
     );
+    // UI feedback for saving
     setLogicSavedCount(rules.length);
     setTimeout(() => {
       setLogicSavedCount(null);
       onClose();
     }, 1200);
   };
-
+ 
   const ConditionalLogicBuilder = () => (
     <>
       <div className="rules-container">
-        {rules.length === 0 && <p className='logic-note'>No rules defined. Add a rule to make this question dynamic.</p>}
+        {rules.length === 0 && <p className='logic-note'>No conditional rules defined. Add a rule to make this question dynamic.</p>}
         {rules.map(rule => (
           <div key={rule.id} className="rule-builder">
             <div className="rule-row">
               <select value={rule.type || 'visible'} onChange={e => updateRule(rule.id, 'type', e.target.value)}>
                 <option value="visible">Make question Visible</option>
                 <option value="enable">Make question Enabled</option>
-                <option value="require">Make question Required</option>
+                {/* "Required" is now handled by the top-level checkbox, so it is removed from here */}
               </select>
-              {/* If 'require', show only a simple required toggle, no dependency fields */}
-              {rule.type === 'require' ? (
-                <span style={{marginLeft:'10px'}}>This question will always be required.</span>
-              ) : (
-                <>
-                  <span>if</span>
-                  <select value={rule.sourceQuestionId || ''} onChange={e => updateRule(rule.id, 'sourceQuestionId', e.target.value)}>
-                    <option value="">Select question...</option>
-                    {availableQuestions.map(q => <option key={q.id} value={q.id}>{q.title}</option>)}
-                  </select>
-                  <select value={rule.operator || '='} onChange={e => updateRule(rule.id, 'operator', e.target.value)}>
-                    <option value="=">is equal to</option>
-                    <option value="<>">is not equal to</option>
-                    <option value="empty">is empty</option>
-                    <option value="notempty">is not empty</option>
-                  </select>
-                  {/* Only show the value input if the operator needs one */}
-                  {(rule.operator !== 'empty' && rule.operator !== 'notempty') && (() => {
-                    // Find the referenced question
-                    const refQuestion = availableQuestions.find(q => q.id === rule.sourceQuestionId);
-                    if (refQuestion && (refQuestion.type === 'radiogroup' || refQuestion.type === 'dropdown') && Array.isArray(refQuestion.choices)) {
-                      // Show a dropdown of choices for radio/dropdown
-                      return (
-                        <select value={rule.value || ''} onChange={e => updateRule(rule.id, 'value', e.target.value)}>
-                          <option value="">Select choice...</option>
-                          {refQuestion.choices.map(opt => (
-                            <option key={opt.value || opt.text} value={opt.value || opt.text}>{opt.text || opt.value}</option>
-                          ))}
-                        </select>
-                      );
-                    }
-                    // Fallback to text input for other question types
-                    return (
-                      <input type="text" value={rule.value || ''} placeholder="value..." onChange={e => updateRule(rule.id, 'value', e.target.value)} />
-                    );
-                  })()}
-                </>
-              )}
+              <span>if</span>
+              <select value={rule.sourceQuestionId || ''} onChange={e => updateRule(rule.id, 'sourceQuestionId', e.target.value)}>
+                <option value="">Select question...</option>
+                {availableQuestions.map(q => <option key={q.id} value={q.id}>{q.title}</option>)}
+              </select>
+              <select value={rule.operator || '='} onChange={e => updateRule(rule.id, 'operator', e.target.value)}>
+                <option value="=">is equal to</option>
+                <option value="<>">is not equal to</option>
+                <option value="empty">is empty</option>
+                <option value="notempty">is not empty</option>
+              </select>
+              {(rule.operator !== 'empty' && rule.operator !== 'notempty') && (() => {
+                const refQuestion = availableQuestions.find(q => q.id === rule.sourceQuestionId);
+                if (refQuestion && (refQuestion.type === 'radiogroup' || refQuestion.type === 'dropdown') && Array.isArray(refQuestion.choices)) {
+                  return (
+                    <select value={rule.value || ''} onChange={e => updateRule(rule.id, 'value', e.target.value)}>
+                      <option value="">Select choice...</option>
+                      {refQuestion.choices.map(opt => (
+                        <option key={opt.value || opt.text} value={opt.value || opt.text}>{opt.text || opt.value}</option>
+                      ))}
+                    </select>
+                  );
+                }
+                return (
+                  <input type="text" value={rule.value || ''} placeholder="value..." onChange={e => updateRule(rule.id, 'value', e.target.value)} />
+                );
+              })()}
               <button onClick={() => setRules(rules.filter(r => r.id !== rule.id))} className="remove-choice-btn">-</button>
             </div>
           </div>
@@ -180,7 +148,7 @@ function LogicEditor({ field, formFields, setFormFields, onClose }) {
       <button onClick={addRule} className="add-choice-btn">+ Add a new conditional rule</button>
     </>
   );
-
+ 
   const RepeatLogicBuilder = () => (
      <div className="logic-builder">
         Repeat this question based on the answer to
@@ -191,23 +159,35 @@ function LogicEditor({ field, formFields, setFormFields, onClose }) {
         <p className='logic-note'>Note: The selected source question must be a Number Input type.</p>
     </div>
   );
-
+ 
   const modalContent = (
     <div className="modal-backdrop">
       <div className="modal-content">
         <h3>Logic for "{field.title}"</h3>
         {logicSavedCount !== null && (
           <div className="logic-saved-indicator" style={{background:'#2ecc40',color:'#fff',padding:'8px',borderRadius:'4px',marginBottom:'10px',textAlign:'center'}}>
-            {logicSavedCount === 1
-              ? '1 logic rule saved.'
-              : `${logicSavedCount} logic rules saved.`}
+            {logicSavedCount === 0 ? 'Logic cleared.' : `${logicSavedCount} logic rule(s) saved.`}
           </div>
         )}
+ 
+        <div className="top-level-logic">
+            <label>
+                <input
+                    type="checkbox"
+                    checked={isRequired}
+                    onChange={(e) => setIsRequired(e.target.checked)}
+                />
+                This question is always required
+            </label>
+        </div>
+ 
         <div className="logic-mode-selector">
-          <label><input type="radio" value="conditional" checked={logicMode === 'conditional'} onChange={() => setLogicMode('conditional')} /> Conditional Logic (Show/Hide, etc.)</label>
+          <label><input type="radio" value="conditional" checked={logicMode === 'conditional'} onChange={() => setLogicMode('conditional')} /> Conditional Logic (Show/Hide, Enable/Disable)</label>
           <label><input type="radio" value="repeat" checked={logicMode === 'repeat'} onChange={() => setLogicMode('repeat')} /> Repeat Logic (Loop)</label>
         </div>
+        
         {logicMode === 'conditional' ? <ConditionalLogicBuilder /> : <RepeatLogicBuilder />}
+        
         <div className="modal-actions">
           <button onClick={handleSave}>Save Logic</button>
           <button onClick={onClose} className="cancel-btn">Cancel</button>
@@ -215,8 +195,8 @@ function LogicEditor({ field, formFields, setFormFields, onClose }) {
       </div>
     </div>
   );
-
+ 
   return ReactDOM.createPortal(modalContent, document.body);
 }
-
+ 
 export default LogicEditor;
