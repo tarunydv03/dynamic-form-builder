@@ -67,10 +67,16 @@ function LogicEditor({ field, formFields, setFormFields, onClose }) {
             rules.forEach(rule => {
               const { sourceQuestionId, operator, value, type } = rule;
               let expression = '';
+              const refQuestion = availableQuestions.find(q => q.id === sourceQuestionId);
               if (sourceQuestionId && operator) {
-                expression = (operator === 'empty' || operator === 'notempty')
-                  ? `{${sourceQuestionId}} ${operator}`
-                  : `{${sourceQuestionId}} ${operator} '${value}'`;
+                if (refQuestion && (refQuestion.type === 'checkbox' || refQuestion.type === 'ranking')) {
+                  // Use 'contains' for multi-select
+                  expression = `{${sourceQuestionId}} contains '${value}'`;
+                } else {
+                  expression = (operator === 'empty' || operator === 'notempty')
+                    ? `{${sourceQuestionId}} ${operator}`
+                    : `{${sourceQuestionId}} ${operator} '${value}'`;
+                }
               }
  
               if (expression) {
@@ -140,6 +146,17 @@ function LogicEditor({ field, formFields, setFormFields, onClose }) {
                   return (
                     <select value={rule.value || ''} onChange={e => updateRule(rule.id, 'value', e.target.value)}>
                       <option value="">Select choice...</option>
+                      {refQuestion.choices.map(opt => (
+                        <option key={opt.value || opt.text} value={opt.value || opt.text}>{opt.text || opt.value}</option>
+                      ))}
+                    </select>
+                  );
+                }
+                if (refQuestion && (refQuestion.type === 'checkbox' || refQuestion.type === 'ranking') && Array.isArray(refQuestion.choices)) {
+                  // Show dropdown for multi-select (checkbox/ranking) questions
+                  return (
+                    <select value={rule.value || ''} onChange={e => updateRule(rule.id, 'value', e.target.value)}>
+                      <option value="">Select option...</option>
                       {refQuestion.choices.map(opt => (
                         <option key={opt.value || opt.text} value={opt.value || opt.text}>{opt.text || opt.value}</option>
                       ))}
