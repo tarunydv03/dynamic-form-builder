@@ -126,6 +126,16 @@ function LogicEditor({ field, formFields, setFormFields, onClose }) {
               </select>
               {(rule.operator !== 'empty' && rule.operator !== 'notempty') && (() => {
                 const refQuestion = availableQuestions.find(q => q.id === rule.sourceQuestionId);
+                if (refQuestion && refQuestion.type === 'boolean') {
+                  // Show dropdown for boolean (yes/no) questions
+                  return (
+                    <select value={rule.value === true ? 'true' : rule.value === false ? 'false' : rule.value || ''} onChange={e => updateRule(rule.id, 'value', e.target.value === 'true' ? true : e.target.value === 'false' ? false : e.target.value)}>
+                      <option value="">Select...</option>
+                      <option value="true">Yes</option>
+                      <option value="false">No</option>
+                    </select>
+                  );
+                }
                 if (refQuestion && (refQuestion.type === 'radiogroup' || refQuestion.type === 'dropdown') && Array.isArray(refQuestion.choices)) {
                   return (
                     <select value={rule.value || ''} onChange={e => updateRule(rule.id, 'value', e.target.value)}>
